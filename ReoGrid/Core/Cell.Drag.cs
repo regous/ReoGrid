@@ -7,7 +7,10 @@ using unvell.ReoGrid.Data;
 using unvell.ReoGrid.DataFormat;
 using unvell.ReoGrid.Events;
 using unvell.ReoGrid.Formula;
+#if EX_SCRIPT
+using unvell.ReoGrid.Script;
 using unvell.ReoScript;
+#endif
 
 namespace unvell.ReoGrid
 {
