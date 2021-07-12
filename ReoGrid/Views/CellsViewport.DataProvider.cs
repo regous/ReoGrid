@@ -13,10 +13,10 @@ namespace unvell.ReoGrid.Views
         {
             if (DataProviders.Contains(provider))
                 return;
-            if (provider.Trigger.TryGetTarget(out var tigger) && tigger != null)
+            if (provider.Trigger.TryGetTarget(out var trigger) && trigger != null)
             {
-                sheet.workbook.ControlInstance.Children.Add(tigger);
-                tigger.Visibility = System.Windows.Visibility.Collapsed;
+                sheet.workbook.ControlInstance.Children.Add(trigger);
+                trigger.Visibility = System.Windows.Visibility.Collapsed;
             }
             if (provider.Selector.TryGetTarget(out var selector) && selector != null)
             {
@@ -39,11 +39,11 @@ namespace unvell.ReoGrid.Views
                         cell.DataProvider = null;
                 }
             }
-            if (provider.Trigger.TryGetTarget(out var tigger) && tigger != null)
+            if (provider.Trigger.TryGetTarget(out var trigger) && trigger != null)
             {
-                tigger.Visibility = System.Windows.Visibility.Collapsed;
-                if (sheet.workbook.ControlInstance.Children.Contains(tigger))
-                    sheet.workbook.ControlInstance.Children.Remove(tigger);
+                trigger.Visibility = System.Windows.Visibility.Collapsed;
+                if (sheet.workbook.ControlInstance.Children.Contains(trigger))
+                    sheet.workbook.ControlInstance.Children.Remove(trigger);
             }
             if (provider.Selector.TryGetTarget(out var selector) && selector != null)
             {
@@ -59,71 +59,117 @@ namespace unvell.ReoGrid.Views
 		private void DrawDataProvider(CellDrawingContext dc)
 		{
             if (dc.DrawMode != DrawMode.View) return;
-			if (DataProviders.Count == 0)
-				return;
-            DataProviders.ForEach(x =>
-            {
-                if (x.Trigger.TryGetTarget(out var trigger) && trigger != null)
-                {
-                    trigger.Visibility = System.Windows.Visibility.Collapsed;
-                }
-            });
-            DataProviders.ForEach(x =>
-            {
-                if (x.Selector.TryGetTarget(out var selector) && selector != null)
-                {
-                    selector.IsOpen = false;
-                }
-            });
+            if (DataProviders.Count == 0)
+                return;
+  
+
             if (sheet.SelectionRange.IsEmpty || dc.DrawMode != DrawMode.View)
-				return;
-
-			var g = dc.Graphics as WPFGraphics;
-			var scaledSelectionRect = GetScaledAndClippedRangeRect(this,
-				sheet.SelectionRange.StartPos, sheet.SelectionRange.StartPos, 0);
-
-            Cell cell = sheet.GetCell(sheet.SelectionRange.StartPos);
-            if (cell == null || cell.DataProvider == null) return;
-
-            if (g.TransformStack.Count != 0)
             {
-                MatrixTransform mt = g.TransformStack.Peek();
-                if (mt.TryTransform(new System.Windows.Point(cell.Right, cell.Top), out var righttop))
+                DataProviders.ForEach(x =>
                 {
-                    if (righttop.X < this.Left || righttop.Y < this.Top)
+                    if (x.Trigger.TryGetTarget(out var trigger) && trigger != null)
                     {
-                        if (cell.DataProvider.Trigger.TryGetTarget(out var tigger))
-                        {
-                            tigger.Visibility = System.Windows.Visibility.Collapsed;
-
-                            tigger.Height = cell.Height;
-                        }
-                        return;
+                        trigger.Visibility = System.Windows.Visibility.Collapsed;
                     }
-                    else
+                });
+                DataProviders.ForEach(x =>
+                {
+                    if (x.Selector.TryGetTarget(out var selector) && selector != null)
                     {
-                        mt.TryTransform(new System.Windows.Point(cell.Left, cell.Bottom), out var leftbottom);
-                        if (cell.DataProvider.Trigger.TryGetTarget(out var tigger) && tigger != null)
-                        {
-                            tigger.Height = cell.Height;
-                            tigger.Visibility = System.Windows.Visibility.Collapsed;
-                            var position = (tigger.Parent as Canvas).PointToScreen(leftbottom);
-                            tigger.Margin = new System.Windows.Thickness(righttop.X, righttop.Y, 0, 0);
-                            tigger.Visibility = System.Windows.Visibility.Visible;
-                            Rectangle rectangle = new Rectangle(position.X, position.Y, righttop.X - leftbottom.X, righttop.Y - leftbottom.Y);
-                            cell.DataProvider.Update(rectangle, cell);
-                        }
+                        selector.IsOpen = false;
                     }
-                }
+                });
             }
             else
             {
-                if (cell.DataProvider.Trigger.TryGetTarget(out var tigger))
+                Cell cell = sheet.GetCell(sheet.SelectionRange.StartPos);
+                for (int i = 0; i < DataProviders.Count; i++)
                 {
-                    tigger.Margin = new System.Windows.Thickness(this.Left + scaledSelectionRect.Right, this.Top + scaledSelectionRect.Top, 0, 0);
-                    tigger.Visibility = System.Windows.Visibility.Visible;
+                    DataProvider dp = DataProviders[i];
+                    if (dp.ActiveCell == null) continue;
+                    if (dp.ActiveCell.TryGetTarget(out var tc) && tc == cell) continue;
+                    if (dp.Trigger.TryGetTarget(out var trigger) && trigger != null)
+                    {
+                        if(trigger.Visibility != System.Windows.Visibility.Collapsed)
+                            trigger.Visibility = System.Windows.Visibility.Collapsed;
+                    }
+                    if (dp.Selector.TryGetTarget(out var selector) && selector != null)
+                    {
+                        if (selector.IsOpen) 
+                            selector.IsOpen = false;
+                    }
+                }
+
+                WPFGraphics g = dc.Graphics as WPFGraphics;
+
+                
+                if (cell == null || cell.DataProvider == null) return;
+                
+                if (g.TransformStack.Count != 0)
+                {
+                    MatrixTransform mt = g.TransformStack.Peek();
+                    if (mt.TryTransform(new System.Windows.Point(cell.Right, cell.Top), out var righttop))
+                    {
+                        if (righttop.X < this.Left || righttop.Y < this.Top)
+                        {
+                            if (cell.DataProvider.Trigger.TryGetTarget(out var trigger))
+                            {
+                                trigger.Visibility = System.Windows.Visibility.Collapsed;
+                            }
+                        }
+                        else
+                        {
+                            mt.TryTransform(new System.Windows.Point(cell.Left, cell.Bottom), out var leftbottom);
+                            if (cell.DataProvider.Trigger.TryGetTarget(out var trigger) && trigger != null)
+                            {
+                                bool flag = false;
+                                if (!IsEqual(trigger.Height, cell.Height))
+                                {
+                                    trigger.Height = cell.Height;
+                                    flag = true;
+                                }
+
+                                if (trigger.Margin.Right != 0 ||
+                                    trigger.Margin.Bottom != 0 ||
+                                    !IsEqual(trigger.Margin.Left, righttop.X) ||
+                                    !IsEqual(trigger.Margin.Left, righttop.X))
+                                {
+                                    trigger.Margin = new System.Windows.Thickness(righttop.X, righttop.Y, 0, 0);
+                                    flag = true;
+                                }
+
+                                if (trigger.Visibility != System.Windows.Visibility.Visible)
+                                {
+                                    trigger.Visibility = System.Windows.Visibility.Visible;
+                                    flag = true;
+                                }
+
+                                if (flag)
+                                {
+                                    Point position = (trigger.Parent as Canvas).PointToScreen(leftbottom);
+                                    Rectangle rectangle = new Rectangle(position.X, position.Y, righttop.X - leftbottom.X, righttop.Y - leftbottom.Y);
+                                    cell.DataProvider.Update(rectangle, cell);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (cell.DataProvider.Trigger.TryGetTarget(out var trigger))
+                    {
+                        Rectangle scaledSelectionRect = GetScaledAndClippedRangeRect(this,
+                            sheet.SelectionRange.StartPos, sheet.SelectionRange.StartPos, 0);
+                        trigger.Margin = new System.Windows.Thickness(this.Left + scaledSelectionRect.Right, this.Top + scaledSelectionRect.Top, 0, 0);
+                        trigger.Visibility = System.Windows.Visibility.Visible;
+                    }
                 }
             }
+        }
+
+        public bool IsEqual(double v1,double v2)
+        {
+            return System.Math.Abs(v1 - v2) < 0.1;
         }
     }
 }
