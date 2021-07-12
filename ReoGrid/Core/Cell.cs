@@ -168,7 +168,11 @@ namespace unvell.ReoGrid
 		/// <param name="data">Data to be set.</param>
 		internal void SetSingleCellData(Cell cell, object data)
 		{
-			// set cell body
+            var args = new BeforeCellDataChangedEventArgs(cell, data, cell.Data);
+            BeforeCellDataChanged?.Invoke(this, args);
+            if (args.IsCancelled)
+                return;
+            // set cell body
 			if (data is ICellBody)
 			{
 				SetCellBody(cell, (ICellBody)data);
@@ -649,7 +653,8 @@ namespace unvell.ReoGrid
 		/// Event raised when any data has been changed
 		/// </summary>
 		public event EventHandler<CellEventArgs> CellDataChanged;
-	}
+		public event EventHandler<BeforeCellDataChangedEventArgs> BeforeCellDataChanged;
+    }
 
 	#region Cell
 
