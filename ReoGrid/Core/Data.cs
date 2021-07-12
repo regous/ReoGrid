@@ -169,7 +169,11 @@ namespace unvell.ReoGrid
                 .ToList();
             var autoFillSequence = new AutoFillSequence(autoFillSequenceInput);
             var autoFillExtrapolatedValues = autoFillSequence.Extrapolate(toCells.Count);
-
+            DragCellData dragCellData = new DragCellData()
+            {
+                FromCells = new List<CellPosition>(fromCells),
+                ToCells = new List<CellPosition>(toCells)
+            };
             for (var toCellIndex = 0; toCellIndex < toCells.Count; toCellIndex++)
             {
                 var fromCellIndex = toCellIndex % fromCells.Count;
@@ -184,7 +188,29 @@ namespace unvell.ReoGrid
                 }
                 else
                 {
-                    toCell.Data = autoFillExtrapolatedValues[toCellIndex];
+                    toCell.DataFormat = fromCell.DataFormat;
+                    toCell.DataFormatArgs = fromCell.DataFormatArgs;
+
+                    //toCell.Data = autoFillExtrapolatedValues[toCellIndex];
+                    dragCellData.Data = autoFillExtrapolatedValues[toCellIndex];
+                    if (toCell.SetDragData(dragCellData) == false)
+                    {
+                        break;
+                    }
+                    toCell.Style = fromCell.Style;
+                    //toCell.Style.HAlign = fromCell.Style.HAlign;
+                    //toCell.Style.VAlign = fromCell.Style.VAlign;
+                    //toCell.Style.TextColor = fromCell.Style.TextColor;
+                    //toCell.Style.FontName = fromCell.Style.FontName;
+                    //toCell.Style.FontSize = fromCell.Style.FontSize;
+                    //toCell.Style.Bold = fromCell.Style.Bold;
+                    //toCell.Style.Italic = fromCell.Style.Italic;
+                    //toCell.Style.Strikethrough = fromCell.Style.Strikethrough;
+                    //toCell.Style.Underline = fromCell.Style.Underline;
+                    //toCell.Style.TextWrap = fromCell.Style.TextWrap;
+                    //toCell.Style.Indent = fromCell.Style.Indent;
+                    //toCell.Style.Padding = fromCell.Style.Padding;
+                    //toCell.Style.RotationAngle = fromCell.Style.RotationAngle;
                 }
             }
         }

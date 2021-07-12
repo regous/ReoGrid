@@ -350,7 +350,7 @@ namespace unvell.ReoGrid.Rendering
 		#region Transform
 
 		private Stack<MatrixTransform> transformStack = new Stack<MatrixTransform>();
-
+		internal Stack<MatrixTransform> TransformStack => transformStack;
 		public void PushTransform()
 		{
 			this.PushTransform(Matrix.Identity);

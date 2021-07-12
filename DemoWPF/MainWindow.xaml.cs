@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -33,6 +34,12 @@ namespace unvell.ReoGrid.WPFDemo
 
 			// add demo sheet 3: cell types
 			AddDemoSheet3();
+
+			// add demo sheet 4: data provider
+			AddDemoSheet4();
+
+			// add demo sheet 5: Cell Edit Events
+			AddDemoSheet5();
 		}
 
 		private void UpdateMenuChecks()
@@ -285,8 +292,57 @@ namespace unvell.ReoGrid.WPFDemo
 		}
 		#endregion // Demo Sheet 3 : Built-in Cell Types
 
-		#region Menu - File
-		private void File_New_Click(object sender, RoutedEventArgs e)
+		#region Demo Sheet 4 : DataProvider
+		private void AddDemoSheet4()
+		{
+			/****************** Sheet3 : Built-in Cell Types ********************/
+			var worksheet = grid.NewWorksheet("DataProvider");
+			Data.DataProvider dp = null;
+			dp = new Data.DataProvider();
+			dp.ItemsSource = new List<string>() { "A", "B", "C" };
+			worksheet.RegisterDataProvider(dp);
+			worksheet[0, 0] = "A";
+			worksheet.GetCell(0, 0).DataProvider = dp;
+            dp.SelectorClosed += Dp_SelectorClosed;
+		}
+
+        private void Dp_SelectorClosed(object sender, Data.SelectorClosedEventArgs e)
+        {
+            if (e.SelectedItem != null)
+                e.Cell.Data = e.SelectedItem.ToString();
+        }
+
+		#endregion
+
+
+		#region Demo Sheet 5 : CellEditEvents
+		private void AddDemoSheet5()
+		{
+			/****************** Sheet3 : Built-in Cell Types ********************/
+			var worksheet = grid.NewWorksheet("CellEditEvents");
+			worksheet.ColumnHeaders[0].Text = "编辑前事件";
+			worksheet.ColumnHeaders[1].Text = "拖拽事件";
+			worksheet.SetCellData(0, 0, "总是设不了值");
+			worksheet.SetCellData(0, 1, "拖的都是10");
+			worksheet.BeforeCellDataChanged += Worksheet_BeforeCellDataChanged;
+            worksheet.DragCellDataChanged += Worksheet_DragCellDataChanged;
+		}
+
+        private void Worksheet_DragCellDataChanged(object sender, Events.DragCellEventArgs e)
+        {
+			if (e.Cell.Column != 1||e.Cell.Row==0) return;
+			e.Cell.Data = 10;
+        }
+
+        private void Worksheet_BeforeCellDataChanged(object sender, Events.BeforeCellDataChangedEventArgs e)
+        {
+			if (e.Cell.Column != 0) return;
+			e.IsCancelled = true;
+        }
+        #endregion
+
+        #region Menu - File
+        private void File_New_Click(object sender, RoutedEventArgs e)
 		{
 			grid.Reset();
 		}

@@ -654,7 +654,8 @@ namespace unvell.ReoGrid
 		/// </summary>
 		public event EventHandler<CellEventArgs> CellDataChanged;
 		public event EventHandler<BeforeCellDataChangedEventArgs> BeforeCellDataChanged;
-    }
+		public event EventHandler<DragCellEventArgs> DragCellDataChanged;
+	}
 
 	#region Cell
 
