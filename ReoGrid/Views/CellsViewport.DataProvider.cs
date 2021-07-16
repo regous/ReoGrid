@@ -85,26 +85,25 @@ namespace unvell.ReoGrid.Views
                 Cell cell = sheet.GetCell(sheet.SelectionRange.StartPos);
                 for (int i = 0; i < DataProviders.Count; i++)
                 {
-                    DataProvider dp = DataProviders[i];
-                    if (dp.ActiveCell == null) continue;
-                    if (dp.ActiveCell.TryGetTarget(out var tc) && tc == cell) continue;
-                    if (dp.Trigger.TryGetTarget(out var trigger) && trigger != null)
+                    DataProvider tmpdp = DataProviders[i];
+                    if (tmpdp.ActiveCell == null) continue;
+                    if (tmpdp.ActiveCell.TryGetTarget(out var tc) && tc == cell) continue;
+                    if (tmpdp.Trigger.TryGetTarget(out var trigger) && trigger != null)
                     {
                         if(trigger.Visibility != System.Windows.Visibility.Collapsed)
                             trigger.Visibility = System.Windows.Visibility.Collapsed;
                     }
-                    if (dp.Selector.TryGetTarget(out var selector) && selector != null)
+                    if (tmpdp.Selector.TryGetTarget(out var selector) && selector != null)
                     {
                         if (selector.IsOpen) 
                             selector.IsOpen = false;
                     }
                 }
 
+                if (cell == null || cell.DataProvider == null) return;
+                DataProvider dp = cell.DataProvider;
                 WPFGraphics g = dc.Graphics as WPFGraphics;
 
-                
-                if (cell == null || cell.DataProvider == null) return;
-                
                 if (g.TransformStack.Count != 0)
                 {
                     MatrixTransform mt = g.TransformStack.Peek();
@@ -112,7 +111,7 @@ namespace unvell.ReoGrid.Views
                     {
                         if (righttop.X < this.Left || righttop.Y < this.Top)
                         {
-                            if (cell.DataProvider.Trigger.TryGetTarget(out var trigger))
+                            if (dp.Trigger.TryGetTarget(out var trigger))
                             {
                                 trigger.Visibility = System.Windows.Visibility.Collapsed;
                             }
@@ -120,7 +119,7 @@ namespace unvell.ReoGrid.Views
                         else
                         {
                             mt.TryTransform(new System.Windows.Point(cell.Left, cell.Bottom), out var leftbottom);
-                            if (cell.DataProvider.Trigger.TryGetTarget(out var trigger) && trigger != null)
+                            if (dp.Trigger.TryGetTarget(out var trigger) && trigger != null)
                             {
                                 bool flag = false;
                                 if (!IsEqual(trigger.Height, cell.Height))
@@ -132,7 +131,7 @@ namespace unvell.ReoGrid.Views
                                 if (trigger.Margin.Right != 0 ||
                                     trigger.Margin.Bottom != 0 ||
                                     !IsEqual(trigger.Margin.Left, righttop.X) ||
-                                    !IsEqual(trigger.Margin.Left, righttop.X))
+                                    !IsEqual(trigger.Margin.Top, righttop.Y))
                                 {
                                     trigger.Margin = new System.Windows.Thickness(righttop.X, righttop.Y, 0, 0);
                                     flag = true;
@@ -147,8 +146,11 @@ namespace unvell.ReoGrid.Views
                                 if (flag)
                                 {
                                     Point position = (trigger.Parent as Canvas).PointToScreen(leftbottom);
-                                    Rectangle rectangle = new Rectangle(position.X, position.Y, righttop.X - leftbottom.X, righttop.Y - leftbottom.Y);
-                                    cell.DataProvider.Update(rectangle, cell);
+                                    Rectangle rectangle = new Rectangle(position.X,
+                                        position.Y,
+                                        righttop.X - leftbottom.X,
+                                        righttop.Y - leftbottom.Y);
+                                    dp.Update(rectangle, cell);
                                 }
                             }
                         }
@@ -156,7 +158,7 @@ namespace unvell.ReoGrid.Views
                 }
                 else
                 {
-                    if (cell.DataProvider.Trigger.TryGetTarget(out var trigger))
+                    if (dp.Trigger.TryGetTarget(out var trigger))
                     {
                         Rectangle scaledSelectionRect = GetScaledAndClippedRangeRect(this,
                             sheet.SelectionRange.StartPos, sheet.SelectionRange.StartPos, 0);

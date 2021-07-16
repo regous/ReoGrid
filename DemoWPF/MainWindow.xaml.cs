@@ -290,21 +290,23 @@ namespace unvell.ReoGrid.WPFDemo
 		{
 			sheet[19, 0] = text;
 		}
-		#endregion // Demo Sheet 3 : Built-in Cell Types
+        #endregion // Demo Sheet 3 : Built-in Cell Types
 
-		#region Demo Sheet 4 : DataProvider
-		private void AddDemoSheet4()
-		{
+        #region Demo Sheet 4 : DataProvider
+        private void AddDemoSheet4()
+        {
 			/****************** Sheet3 : Built-in Cell Types ********************/
-			var worksheet = grid.NewWorksheet("DataProvider");
-			Data.DataProvider dp = null;
-			dp = new Data.DataProvider();
-			dp.ItemsSource = new List<string>() { "A", "B", "C" };
-			worksheet.RegisterDataProvider(dp);
-			worksheet[0, 0] = "A";
-			worksheet.GetCell(0, 0).DataProvider = dp;
+			Worksheet worksheet = grid.NewWorksheet("DataProvider");
+            Data.DataProvider dp = null;
+            dp = new Data.DataProvider();
+            dp.ItemsSource = new List<string>() { "A", "B", "C" };
+            worksheet.RegisterDataProvider(dp);
+            worksheet[0, 0] = "A";
+            worksheet.GetCell(0, 0).DataProvider = dp;
+            worksheet[1, 0] = "B";
+            worksheet.GetCell(1, 0).DataProvider = dp;
             dp.SelectorClosed += Dp_SelectorClosed;
-		}
+        }
 
         private void Dp_SelectorClosed(object sender, Data.SelectorClosedEventArgs e)
         {
@@ -313,7 +315,6 @@ namespace unvell.ReoGrid.WPFDemo
         }
 
 		#endregion
-
 
 		#region Demo Sheet 5 : CellEditEvents
 		private void AddDemoSheet5()
